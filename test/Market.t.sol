@@ -6,12 +6,14 @@ import { Market } from "../src/Market.sol";
 import { USDCtoken } from "../src/USDC.sol";
 import { MyToken } from "../src/myToken.sol";
 import { Vault } from "../src/Vault.sol";
+import { Check } from "../src/Check.sol";
 
 contract MarketTest is Test {
     Market public market;
     USDCtoken public usdcToken;
     MyToken public myToken;
     Vault public vault;
+    Check public check;
     address owner = vm.addr(1);
     address customer = vm.addr(2);
 
@@ -21,6 +23,7 @@ contract MarketTest is Test {
     function setUp() public {
         vault = new Vault();
         market = new Market(owner, address(vault));
+        check = new Check(owner);
 
         usdcToken = new USDCtoken(owner);
         myToken = new MyToken(owner);
@@ -88,5 +91,16 @@ contract MarketTest is Test {
         vm.expectRevert("Token is not allowed");        
         market.buyToken(50, address(usdcToken));
         vm.stopPrank();
+    }
+
+    function testBuy1tokenWith2eth() public base{
+        vm.startPrank(customer);
+        uint startBalance = customer.balance;       
+        market.buyToken{value: 2.24 ether}();
+        vm.stopPrank();
+        console.log(customer.balance);
+        console.log(market.refund());
+        assert(startBalance - customer.balance == 2.24 ether - 0.016 ether);
+        assertEq(myToken.balanceOf(customer), 101);
     }
 }

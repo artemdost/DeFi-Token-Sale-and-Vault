@@ -25,6 +25,14 @@ contract Market{
         _;
     }
 
+    bool locked;
+    modifier noReentrancy() {
+        require(!locked, "No reentrancy");
+        locked = true;
+        _;
+        locked = false;
+    }
+
     // установить родной токен
     function setUpMyToken(address _addr) public isOwner{
         MTK = IERC20(_addr);
@@ -43,7 +51,7 @@ contract Market{
         vault = _vault;
     }
 
-    // купить токен
+    // купить токен за токен erc20
     function buyToken(uint256 amount, address _tokenToPay) public {
         require(allowedTokens[_tokenToPay] == true, "Token is not allowed");
         IERC20 payToken = IERC20(_tokenToPay);
@@ -53,5 +61,20 @@ contract Market{
         MTK.safeTransfer(msg.sender, amount);
         // переводим 10 процентов в хранилище
         payToken.safeTransfer(vault, amount / 10);
-    }            
+    }
+
+    uint public refund;
+    // для покупки за эфир
+    function buyToken() public payable noReentrancy{
+        require(msg.value >= 2 * 10 ** 18 + 2 * 10 ** 17 + 4 * 10 ** 16, "Is not enough to buy at least 1 token");
+        uint amountMTK = msg.value / (2 * 10 ** 18);
+        MTK.safeTransfer(msg.sender , amountMTK);
+        (bool sent, ) = address(vault).call{value: msg.value / 10}("");
+        require(sent, "Failed to send Ether");
+        refund = msg.value - (amountMTK * 2 * 10 ** 18) - msg.value / 10;
+        if (refund >= 1000000000000){
+            (sent, ) = msg.sender.call{value: refund}("");
+            require(sent, "Failed to send Ether");
+        }
+    }                
 }
