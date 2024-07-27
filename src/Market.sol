@@ -13,20 +13,29 @@ contract Market{
     IERC20 MTK;
     // Наше хранилище
     address public vault;
-    constructor(){
-        owner = msg.sender;
-
+    // Допустимые адреса токенов для покупки 
+    mapping (address => bool) public allowedTokens;
+    constructor(address _owner, address _vault){
+        owner = _owner;
+        vault = _vault;
     }
 
     modifier isOwner(){
         require(msg.sender == owner, "not an owner");
         _;
     }
-    // ты идиот ты же токен mtk не установил ьоже нах
 
     // установить родной токен
     function setUpMyToken(address _addr) public isOwner{
         MTK = IERC20(_addr);
+    }
+
+    function allowToken(address _addr) public isOwner{
+        allowedTokens[_addr] = true;
+    }
+
+    function blockToken(address _addr) public isOwner{
+        allowedTokens[_addr] = false;
     }
 
     // установить хранилище
@@ -36,8 +45,13 @@ contract Market{
 
     // купить токен
     function buyToken(uint256 amount, address _tokenToPay) public {
+        require(allowedTokens[_tokenToPay] == true, "Token is not allowed");
         IERC20 payToken = IERC20(_tokenToPay);
-        payToken.safeTransferFrom(msg.sender, address(this), amount);
+        // отправляем с адреса покупателя на данный контракт
+        payToken.safeTransferFrom(msg.sender, address(this), amount + amount / 10);
+        // отправляем наш токен покупателю
         MTK.safeTransfer(msg.sender, amount);
+        // переводим 10 процентов в хранилище
+        payToken.safeTransfer(vault, amount / 10);
     }            
 }
