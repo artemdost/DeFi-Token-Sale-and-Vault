@@ -17,13 +17,17 @@ contract MarketTest is Test {
     address owner = vm.addr(1);
     address customer = vm.addr(2);
 
-    // 1 addr - owner of everything
-    // 2 addr - customer
-
     function setUp() public {
-        vault = new Vault();
+        vault = new Vault(owner);
         market = new Market(owner, address(vault));
-        check = new Check(owner);
+
+        vm.prank(owner);
+        vault.setUpMarket(address(market));
+        
+        check = new Check(address(vault));
+        
+        vm.prank(owner);
+        vault.setUpCheck(address(check));
 
         usdcToken = new USDCtoken(owner);
         myToken = new MyToken(owner);
@@ -102,5 +106,14 @@ contract MarketTest is Test {
         console.log(market.refund());
         assert(startBalance - customer.balance == 2.24 ether - 0.016 ether);
         assertEq(myToken.balanceOf(customer), 101);
+    }
+
+    function testDeposit() public base {
+        vm.startPrank(customer);
+        usdcToken.approve(address(vault), usdcToken.balanceOf(customer));
+        vault.makeDeposit(50, address(usdcToken));
+        vm.stopPrank();
+
+        assertEq(usdcToken.balanceOf(address(vault)), 50);
     }
 }

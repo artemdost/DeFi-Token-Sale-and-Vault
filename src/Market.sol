@@ -54,6 +54,11 @@ contract Market {
         vault = _vault;
     }
 
+    // возвращает, разрешен ли токен к получению
+    function isAllowed(address _addr) public view returns(bool){
+        return allowedTokens[_addr];
+    }
+
     // купить токен за токен erc20
     function buyToken(uint256 amount, address _tokenToPay) public {
         require(allowedTokens[_tokenToPay] == true, "Token is not allowed");
@@ -70,12 +75,12 @@ contract Market {
     // для покупки за эфир
 
     function buyToken() public payable noReentrancy {
-        require(msg.value >= 2 * 10 ** 18 + 2 * 10 ** 17 + 4 * 10 ** 16, "Is not enough to buy at least 1 token");
-        uint256 amountMTK = msg.value / (2 * 10 ** 18);
+        require(msg.value >= 2.24 ether, "Is not enough to buy at least 1 token");
+        uint256 amountMTK = msg.value / (2 ether);
         MTK.safeTransfer(msg.sender, amountMTK);
         (bool sent,) = address(vault).call{value: msg.value / 10}("");
         require(sent, "Failed to send Ether");
-        refund = msg.value - (amountMTK * 2 * 10 ** 18) - msg.value / 10;
+        refund = msg.value - (amountMTK * 2 ether) - msg.value / 10;
         if (refund >= 1000000000000) {
             (sent,) = msg.sender.call{value: refund}("");
             require(sent, "Failed to send Ether");
