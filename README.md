@@ -20,7 +20,7 @@ DeFi-Token-Sale-and-Vault Protocol позволяет пользователям
 3. Check.sol - ERC721 токен чека
 3. MyToken.sol - ERC20 ваш токен
 4. IMarket.sol - интерфейс для Market
-5. ICustomERC721.sol - добавлены функция сжигания и получения Id последнего созданного NFT.
+5. ICustomERC721.sol - добавлены функция сжигания и получения Id последнего созданного NFT.  
 Для тестов  
 1. USDC.sol - ERC20 симуляция USDC
 
