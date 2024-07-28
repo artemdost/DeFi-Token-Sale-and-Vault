@@ -34,8 +34,7 @@ For testing
 6. Set the Market address in the Vault contract using the setUpMarket function.
 7. Send some of your tokens to the Market address so that users can purchase them.
 8. In the Market contract, allow stablecoin addresses for payment using the allowToken function.
-# DeFi-Token-Sale-and-Vault
-
+  
 # DeFi-Token-Sale-and-Vault  
 RU  
 ## Описание
