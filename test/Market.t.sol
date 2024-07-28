@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import {Market} from "../src/Market.sol";
-import {USDCtoken} from "../src/USDC.sol";
+import {USDCtoken} from "../src/TestTokens/USDC.sol";
 import {MyToken} from "../src/myToken.sol";
 import {Vault} from "../src/Vault.sol";
 import {Check} from "../src/Check.sol";
@@ -157,7 +157,7 @@ contract MarketTest is Test {
         assertEq(check.balanceOf(customer), 0);
         assertEq(address(vault).balance, 0.96 ether);
         assertEq(customer.balance, 10.04 ether);
-        
+
         vm.stopPrank();
     }
 

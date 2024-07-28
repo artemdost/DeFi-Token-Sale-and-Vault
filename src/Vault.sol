@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {IMarket} from "../src/IMarket.sol";
-import {ICustomERC721} from "../src/ICustomERC721.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IMarket} from "../src/Interfaces/IMarket.sol";
+import {ICustomERC721} from "../src/Interfaces/ICustomERC721.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract Vault {
     using SafeERC20 for IERC20;

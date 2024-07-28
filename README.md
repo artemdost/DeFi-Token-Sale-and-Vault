@@ -1,66 +1,14 @@
-## Foundry
+### DeFi-Token-Sale-and-Vault
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+# Описание
+MyToken Protocol позволяет пользователям покупать токены MyToken (ERC20) за USDT, USDC, DAI или Ether. Протокол взимает комиссию в размере 10% от общей суммы покупки, которая перечисляется в контракт Vault. Пользователи также могут вносить депозиты в Vault и получать NFT в качестве чека за депозит. Позже пользователи могут вернуть NFT и получить назад депозит плюс 2% бонуса, которые берутся из комиссионых средств, которые были сформированы благодаря покупкам MyToken.
 
-Foundry consists of:
+## Функциональность
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+Покупка MyToken
+Пользователи могут покупать MyToken за USDT, USDC, DAI или Ether:
+    1. Покупка за стейблкоины: Пользователь платит сумму + 10% комиссии.
+    2. Покупка за Ether: Минимальная сумма покупки - 2 Ether, стоимость 1 MyToken = 2 Ether.
 
-## Documentation
-
-https://book.getfoundry.sh/
-
-## Usage
-
-### Build
-
-```shell
-$ forge build
-```
-
-### Test
-
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+Депозиты в Vault
+Пользователи могут вносить депозиты в Vault, получая в ответ NFT как чек за депозит. Позже они могут вернуть NFT и получить назад депозит плюс 2% бонуса.
