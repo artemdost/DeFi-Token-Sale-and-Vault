@@ -59,31 +59,30 @@ contract Market {
         return allowedTokens[_addr];
     }
 
-    // купить токен за токен erc20
-    function buyToken(uint256 amount, address _tokenToPay) public {
-        require(allowedTokens[_tokenToPay] == true, "Token is not allowed");
-        IERC20 payToken = IERC20(_tokenToPay);
-        // отправляем с адреса покупателя на данный контракт
-        payToken.safeTransferFrom(msg.sender, address(this), amount + amount / 10);
-        // отправляем наш токен покупателю
-        MTK.safeTransfer(msg.sender, amount);
-        // переводим 10 процентов в хранилище
-        payToken.safeTransfer(vault, amount / 10);
-    }
-
     uint256 public refund;
-    // для покупки за эфир
-
-    function buyToken() public payable noReentrancy {
-        require(msg.value >= 2.24 ether, "Is not enough to buy at least 1 token");
-        uint256 amountMTK = msg.value / (2 ether);
-        MTK.safeTransfer(msg.sender, amountMTK);
-        (bool sent,) = address(vault).call{value: msg.value / 10}("");
-        require(sent, "Failed to send Ether");
-        refund = msg.value - (amountMTK * 2 ether) - msg.value / 10;
-        if (refund >= 1000000000000) {
-            (sent,) = msg.sender.call{value: refund}("");
+    // купить токен за токен erc20
+    function buyToken(uint256 amount, address _tokenToPay) public payable{
+        if (msg.value > 0){
+            require(msg.value >= 2.24 ether, "Is not enough to buy at least 1 token");
+            uint256 amountMTK = msg.value / (2 ether);
+            MTK.safeTransfer(msg.sender, amountMTK);
+            (bool sent,) = address(vault).call{value: msg.value / 10}("");
             require(sent, "Failed to send Ether");
+            refund = msg.value - (amountMTK * 2 ether) - msg.value / 10;
+            if (refund >= 1000000000000) {
+                (sent,) = msg.sender.call{value: refund}("");
+                require(sent, "Failed to send Ether");
+            }
+        } else {
+            require(amount >= 1, "Amount to buy is less then 1");
+            require(allowedTokens[_tokenToPay] == true, "Token is not allowed");
+            IERC20 payToken = IERC20(_tokenToPay);
+            // отправляем с адреса покупателя на данный контракт
+            payToken.safeTransferFrom(msg.sender, address(this), amount + amount / 10);
+            // отправляем наш токен покупателю
+            MTK.safeTransfer(msg.sender, amount);
+            // переводим 10 процентов в хранилище
+            payToken.safeTransfer(vault, amount / 10);
         }
     }
 }

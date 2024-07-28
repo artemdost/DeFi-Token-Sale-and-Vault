@@ -100,7 +100,7 @@ contract MarketTest is Test {
     function testBuy1tokenWith2eth() public base {
         vm.startPrank(customer);
         uint256 startBalance = customer.balance;
-        market.buyToken{value: 2.24 ether}();
+        market.buyToken{value: 2.24 ether}(0, address(0));
         vm.stopPrank();
         console.log(customer.balance);
         console.log(market.refund());
@@ -108,12 +108,54 @@ contract MarketTest is Test {
         assertEq(myToken.balanceOf(customer), 101);
     }
 
-    function testDeposit() public base {
+    function testDeposit() public base {     
         vm.startPrank(customer);
         usdcToken.approve(address(vault), usdcToken.balanceOf(customer));
         vault.makeDeposit(50, address(usdcToken));
         vm.stopPrank();
 
         assertEq(usdcToken.balanceOf(address(vault)), 50);
+        assertEq(check.balanceOf(customer), 1);
+
     }
+
+    function testReturnDepositTokens() public base {
+        vm.prank(owner);
+        usdcToken.mint(address(vault), 100);
+
+        // делаем депозит
+        vm.startPrank(customer);
+        usdcToken.approve(address(vault), usdcToken.balanceOf(customer));
+        vault.makeDeposit(100, address(usdcToken));
+
+        // возвращаем депозит
+        check.approve(address(vault), 0);
+        vault.returnDeposit(0);
+        vm.stopPrank();
+
+        assertEq(usdcToken.balanceOf(address(vault)), 98);
+        assertEq(usdcToken.balanceOf(customer), 102);
+        assertEq(check.balanceOf(customer), 0);
+
+
+    }
+
+    function testReturnDepositEth() public base {
+        vm.deal(address(vault), 1 ether);
+        vm.startPrank(customer);
+        vault.makeDeposit{value: 2 ether}(0, address(0));
+
+        assertEq(check.balanceOf(customer), 1);
+        assertEq(address(vault).balance, 3 ether);
+        
+        check.approve(address(vault), 0);
+        vault.returnDeposit(0);
+        assertEq(check.balanceOf(customer), 0);
+        assertEq(address(vault).balance, 0.96 ether);
+        assertEq(customer.balance, 10.04 ether);
+
+        vm.stopPrank();
+    }
+
+
 }
