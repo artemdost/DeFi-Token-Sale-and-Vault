@@ -35,7 +35,6 @@ For testing
 7. Send some of your tokens to the Market address so that users can purchase them.
 8. In the Market contract, allow stablecoin addresses for payment using the allowToken function.
   
-# DeFi-Token-Sale-and-Vault  
 RU  
 ## Описание
 DeFi-Token-Sale-and-Vault Protocol позволяет пользователям покупать токены MyToken (ERC20) за USDT, USDC, DAI или Ether. Протокол взимает комиссию в размере 10% от общей суммы покупки, которая перечисляется в контракт Vault. Пользователи также могут вносить депозиты в Vault и получать NFT в качестве чека за депозит. Позже пользователи могут вернуть NFT и получить назад депозит плюс 2% бонуса, которые берутся из комиссионых средств, которые были сформированы благодаря покупкам MyToken.
