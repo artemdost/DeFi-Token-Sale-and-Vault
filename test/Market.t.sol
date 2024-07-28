@@ -18,20 +18,25 @@ contract MarketTest is Test {
     address customer = vm.addr(2);
 
     function setUp() public {
+        vm.startPrank(owner);
+        
+        // 1 step - vault
         vault = new Vault(owner);
-        market = new Market(owner, address(vault));
 
-        vm.prank(owner);
-        vault.setUpMarket(address(market));
-        
+        // 2 step - check
         check = new Check(address(vault));
-        
-        vm.prank(owner);
         vault.setUpCheck(address(check));
 
-        usdcToken = new USDCtoken(owner);
+        // 3 step - myToken
         myToken = new MyToken(owner);
 
+        // skip step
+        usdcToken = new USDCtoken(owner);
+        
+        // 4 step - market
+        market = new Market(owner, address(vault), address(myToken));
+        vault.setUpMarket(address(market));
+        
         vm.deal(customer, 10 ether);
     }
 
@@ -41,9 +46,8 @@ contract MarketTest is Test {
         // дали по 100 токенов каждого типа customer
         usdcToken.mint(customer, 100);
         myToken.mint(customer, 100);
-        // устаналиваем MTK
-        market.setUpMyToken(address(myToken));
         market.allowToken(address(usdcToken));
+
         // дали по 100 токенов каждого типа market
         usdcToken.mint(address(market), 100);
         myToken.mint(address(market), 100);
@@ -153,7 +157,7 @@ contract MarketTest is Test {
         assertEq(check.balanceOf(customer), 0);
         assertEq(address(vault).balance, 0.96 ether);
         assertEq(customer.balance, 10.04 ether);
-
+        
         vm.stopPrank();
     }
 

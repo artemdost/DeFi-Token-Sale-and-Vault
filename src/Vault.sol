@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-// Compatible with OpenZeppelin Contracts ^5.0.0
 pragma solidity ^0.8.20;
 
 import {IMarket} from "../src/IMarket.sol";
@@ -7,31 +6,30 @@ import {ICustomERC721} from "../src/ICustomERC721.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract Vault{
-
+contract Vault {
     using SafeERC20 for IERC20;
-    receive() external payable {}
 
-    address owner;
-    IMarket market;
-    ICustomERC721 check;
+    address public owner;
+    IMarket public market;
+    ICustomERC721 public check;
 
-    enum Status{NotExist, Active, Refunded}
+    enum Status { DontExist, Active, Refunded }
 
-    struct Deposit{
-        Status status; // NotExist - не существует, Active - существует, Refunded - забрали
-        address token; // адрес токена, если это erc20, иначе address(0)
-        uint amount; // либо msg.value либо amount токенов
+    struct Deposit {
+        Status status;
+        address token;
+        uint256 amount;
     }
+    
+    // address => nft_id => deposit(status, token, amount)
+    mapping(address => mapping(uint256 => Deposit)) public deposits;
 
-    mapping (address => mapping(uint => Deposit)) deposits;
-
-    modifier isOwner(){
+    modifier isOwner() {
         require(msg.sender == owner, "not an owner");
         _;
     }
 
-    bool locked;
+    bool private locked;
 
     modifier noReentrancy() {
         require(!locked, "No reentrancy");
@@ -40,67 +38,92 @@ contract Vault{
         locked = false;
     }
 
-    constructor(address _owner){
+    /**
+     * @notice Constructor to initialize the Vault contract.
+     * @param _owner The address of the owner of the contract.
+     */
+    constructor(address _owner) {
         owner = _owner;
     }
 
-    function setUpMarket(address _market) public isOwner{
+    /**
+     * @notice Set the Market contract address.
+     * @dev This function can only be called by the owner of the contract.
+     * @param _market The address of the Market contract.
+     */
+    function setUpMarket(address _market) public isOwner {
         market = IMarket(_market);
     }
 
-    function setUpCheck(address _check) public isOwner{
+    /**
+     * @notice Set the CustomERC721 contract address.
+     * @dev This function can only be called by the owner of the contract.
+     * @param _check The address of the CustomERC721 contract.
+     */
+    function setUpCheck(address _check) public isOwner {
         check = ICustomERC721(_check);
-    }   
+    }
 
-    function makeDeposit(uint256 _amount, address _tokenToPay) public payable{
-        if (msg.value > 0){
-            // минтим нфт тому, кто сделал депозит
+    /**
+     * @notice Make a deposit and mint an NFT.
+     * @dev Deposits can be made in ETH or an allowed ERC20 token.
+     * @param _amount The amount of the ERC20 token to be deposited.
+     * @param _tokenToPay The address of the ERC20 token to be used for the deposit.
+     */
+    function makeDeposit(uint256 _amount, address _tokenToPay) public payable {
+        if (msg.value > 0) {
+            // mint check for msg.sender
             check.safeMint(msg.sender);
-            // создаем депозит
+            // connect deposit to nft
             deposits[msg.sender][check.getLastId()] = Deposit({
-                status: Status(1), // или false, в зависимости от условий вашего контракта
-                token: address(0), // указать адрес токена, если это не ETH
-                amount: msg.value // или другое значение, если это не ETH
+                status: Status.Active,
+                token: address(0),
+                amount: msg.value
             });
         } else {
-            require(market.isAllowed(_tokenToPay) == true, "Token is not allowed");
+            require(market.isAllowed(_tokenToPay), "Token is not allowed");
             IERC20 payToken = IERC20(_tokenToPay);
-            // отправляем с адреса покупателя на данный контракт
+            // transfer pay tokens from msg.sender to this contract
             payToken.safeTransferFrom(msg.sender, address(this), _amount);
-            // минтим нфт тому, кто сделал депозит
+            // mint check for msg.sender
             check.safeMint(msg.sender);
-
-            // создаем депозит
+            // connect deposit to nft
             deposits[msg.sender][check.getLastId()] = Deposit({
-                status: Status(1), // или false, в зависимости от условий вашего контракта
-                token: _tokenToPay, // указать адрес токена, если это не ETH
-                amount: _amount // или другое значение, если это не ETH
+                status: Status.Active,
+                token: _tokenToPay,
+                amount: _amount
             });
         }
     }
 
-
-    // вернуть депозит
-    function returnDeposit(uint _tokenId) public noReentrancy payable{
+    /**
+     * @notice Return a deposit and burn the corresponding NFT.
+     * @dev This function can only be called by the owner of the NFT.
+     * @param _tokenId The ID of the NFT representing the deposit.
+     */
+    function returnDeposit(uint256 _tokenId) public noReentrancy payable {
         require(msg.sender == check.ownerOf(_tokenId), "You are not an owner of this NFT");
+        require(deposits[msg.sender][_tokenId].status == Status.Active, "Deposit is not active");
 
-        require(deposits[msg.sender][_tokenId].status != Status(2)
-        && deposits[msg.sender][_tokenId].status != Status(0));
-        
+        // burn check
         check.burn(_tokenId);
-        // отправляем токены с данного нфт обратно юзеру, после сжигания нфт
-        deposits[msg.sender][_tokenId].status = Status(2);
-        if (deposits[msg.sender][_tokenId].token != address(0)){
-            IERC20(deposits[msg.sender][_tokenId].token).safeTransfer(
-                msg.sender,
-                deposits[msg.sender][_tokenId].amount + deposits[msg.sender][_tokenId].amount / 100 * 2
-            );
+        
+
+        uint depositAmount = deposits[msg.sender][_tokenId].amount;
+        uint depositBonus = deposits[msg.sender][_tokenId].amount / 50;
+        IERC20 payToken = IERC20(deposits[msg.sender][_tokenId].token);
+        
+        if (deposits[msg.sender][_tokenId].token != address(0)) {
+            // transfer deposit tokens from this contract to msg.sender
+            payToken.safeTransfer(msg.sender, depositAmount + depositBonus);
+            deposits[msg.sender][_tokenId].status = Status.Refunded;
         } else {
-            (bool sent,) = msg.sender.call{value: deposits[msg.sender][_tokenId].amount
-            + deposits[msg.sender][_tokenId].amount / 100 * 2
-            }("");
-            require(sent);
+            // transfer deposit eth from this contract to msg.sender
+            (bool sent,) = msg.sender.call{value: depositAmount + depositBonus}("");
+            require(sent, "Failed to send Ether");
+            deposits[msg.sender][_tokenId].status = Status.Refunded;
         }
     }
 
+    receive() external payable {}
 }
