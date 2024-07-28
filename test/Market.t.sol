@@ -19,7 +19,7 @@ contract MarketTest is Test {
 
     function setUp() public {
         vm.startPrank(owner);
-        
+
         // 1 step - vault
         vault = new Vault(owner);
 
@@ -32,11 +32,11 @@ contract MarketTest is Test {
 
         // skip step
         usdcToken = new USDCtoken(owner);
-        
+
         // 4 step - market
         market = new Market(owner, address(vault), address(myToken));
         vault.setUpMarket(address(market));
-        
+
         vm.deal(customer, 10 ether);
     }
 
@@ -112,7 +112,7 @@ contract MarketTest is Test {
         assertEq(myToken.balanceOf(customer), 101);
     }
 
-    function testDeposit() public base {     
+    function testDeposit() public base {
         vm.startPrank(customer);
         usdcToken.approve(address(vault), usdcToken.balanceOf(customer));
         vault.makeDeposit(50, address(usdcToken));
@@ -120,7 +120,6 @@ contract MarketTest is Test {
 
         assertEq(usdcToken.balanceOf(address(vault)), 50);
         assertEq(check.balanceOf(customer), 1);
-
     }
 
     function testReturnDepositTokens() public base {
@@ -140,8 +139,6 @@ contract MarketTest is Test {
         assertEq(usdcToken.balanceOf(address(vault)), 98);
         assertEq(usdcToken.balanceOf(customer), 102);
         assertEq(check.balanceOf(customer), 0);
-
-
     }
 
     function testReturnDepositEth() public base {
@@ -151,7 +148,7 @@ contract MarketTest is Test {
 
         assertEq(check.balanceOf(customer), 1);
         assertEq(address(vault).balance, 3 ether);
-        
+
         check.approve(address(vault), 0);
         vault.returnDeposit(0);
         assertEq(check.balanceOf(customer), 0);
@@ -160,6 +157,4 @@ contract MarketTest is Test {
 
         vm.stopPrank();
     }
-
-
 }

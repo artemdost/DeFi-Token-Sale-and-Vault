@@ -15,7 +15,7 @@ interface ICustomERC721 is IERC721 {
      * @notice Retrieves the ID of the last minted token.
      * @return The ID of the last minted token.
      */
-    function getLastId() external returns (uint);
+    function getLastId() external returns (uint256);
 
     /**
      * @notice Burns the specified token.

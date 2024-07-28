@@ -31,7 +31,7 @@ contract Check is ERC721, ERC721Burnable, Ownable {
      * @dev Can only be called by the owner (in this case by Vault)
      * @return The ID of the last minted token. If no tokens have been minted, revert with ""Check NFT does not exist"
      */
-    function getLastId() public view onlyOwner returns (uint) {
+    function getLastId() public view onlyOwner returns (uint256) {
         if (_nextTokenId == 0) {
             revert("Check NFT does not exist");
         } else {
@@ -39,4 +39,3 @@ contract Check is ERC721, ERC721Burnable, Ownable {
         }
     }
 }
-

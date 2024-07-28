@@ -75,7 +75,7 @@ contract Market {
 
     /**
      * @notice Checks if the given token address is allowed for payments.
-     * @dev This function is crucial for validating token payments in the buyToken function 
+     * @dev This function is crucial for validating token payments in the buyToken function
      *      and makeDeposit function in the Vault contract.
      * @param _addr The address of the token to check for payment eligibility.
      * @return bool True if the token is allowed, false otherwise.

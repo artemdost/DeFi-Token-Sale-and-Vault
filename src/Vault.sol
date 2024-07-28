@@ -13,14 +13,18 @@ contract Vault {
     IMarket public market;
     ICustomERC721 public check;
 
-    enum Status { DontExist, Active, Refunded }
+    enum Status {
+        DontExist,
+        Active,
+        Refunded
+    }
 
     struct Deposit {
         Status status;
         address token;
         uint256 amount;
     }
-    
+
     // address => nft_id => deposit(status, token, amount)
     mapping(address => mapping(uint256 => Deposit)) public deposits;
 
@@ -75,11 +79,8 @@ contract Vault {
             // mint check for msg.sender
             check.safeMint(msg.sender);
             // connect deposit to nft
-            deposits[msg.sender][check.getLastId()] = Deposit({
-                status: Status.Active,
-                token: address(0),
-                amount: msg.value
-            });
+            deposits[msg.sender][check.getLastId()] =
+                Deposit({status: Status.Active, token: address(0), amount: msg.value});
         } else {
             require(market.isAllowed(_tokenToPay), "Token is not allowed");
             IERC20 payToken = IERC20(_tokenToPay);
@@ -88,11 +89,8 @@ contract Vault {
             // mint check for msg.sender
             check.safeMint(msg.sender);
             // connect deposit to nft
-            deposits[msg.sender][check.getLastId()] = Deposit({
-                status: Status.Active,
-                token: _tokenToPay,
-                amount: _amount
-            });
+            deposits[msg.sender][check.getLastId()] =
+                Deposit({status: Status.Active, token: _tokenToPay, amount: _amount});
         }
     }
 
@@ -102,18 +100,17 @@ contract Vault {
      *      Before the receipt can be burned, it must be approved to manage the Vault contract
      * @param _tokenId The ID of the NFT representing the deposit.
      */
-    function returnDeposit(uint256 _tokenId) public noReentrancy payable {
+    function returnDeposit(uint256 _tokenId) public payable noReentrancy {
         require(msg.sender == check.ownerOf(_tokenId), "You are not an owner of this NFT");
         require(deposits[msg.sender][_tokenId].status == Status.Active, "Deposit is not active");
 
         // burn check
         check.burn(_tokenId);
-        
 
-        uint depositAmount = deposits[msg.sender][_tokenId].amount;
-        uint depositBonus = deposits[msg.sender][_tokenId].amount / 50;
+        uint256 depositAmount = deposits[msg.sender][_tokenId].amount;
+        uint256 depositBonus = deposits[msg.sender][_tokenId].amount / 50;
         IERC20 payToken = IERC20(deposits[msg.sender][_tokenId].token);
-        
+
         if (deposits[msg.sender][_tokenId].token != address(0)) {
             // transfer deposit tokens from this contract to msg.sender
             payToken.safeTransfer(msg.sender, depositAmount + depositBonus);
