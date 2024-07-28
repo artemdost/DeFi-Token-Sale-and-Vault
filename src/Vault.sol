@@ -99,6 +99,7 @@ contract Vault {
     /**
      * @notice Return a deposit and burn the corresponding NFT.
      * @dev This function can only be called by the owner of the NFT.
+     *      Before the receipt can be burned, it must be approved to manage the Vault contract
      * @param _tokenId The ID of the NFT representing the deposit.
      */
     function returnDeposit(uint256 _tokenId) public noReentrancy payable {

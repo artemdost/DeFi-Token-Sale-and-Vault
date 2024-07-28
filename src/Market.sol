@@ -98,6 +98,7 @@ contract Market {
      * @dev If the user pays with ETH, the minimum amount required is 2.24 ETH and amount and _tokenToPay values do not matter
      *      A 10% commission is sent to the vault.
      *      If there is an extra ETH after the purchase, it will be refunded to the user.
+     *      Before pay token can be transfered from user, it must be approved to manage the Market contract
      * @param amount The amount of the ERC20 token (other than ETH) to be used for purchasing MTK tokens.
      * @param _tokenToPay The address of the ERC20 token to be used for purchasing MTK tokens.
      */
