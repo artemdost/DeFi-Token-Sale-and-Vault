@@ -46,7 +46,7 @@ contract MarketTest is Test {
         // дали по 100 токенов каждого типа customer
         usdcToken.mint(customer, 100);
         myToken.mint(customer, 100);
-        market.allowToken(address(usdcToken));
+        market.allowToken(address(usdcToken), true);
 
         // дали по 100 токенов каждого типа market
         usdcToken.mint(address(market), 100);
@@ -93,7 +93,7 @@ contract MarketTest is Test {
 
     function testCrashifTokenIsntAllowed() public base {
         vm.prank(owner);
-        market.blockToken(address(usdcToken));
+        market.allowToken(address(usdcToken), false);
         vm.startPrank(customer);
         usdcToken.approve(address(market), usdcToken.balanceOf(customer));
         vm.expectRevert("Token is not allowed");
@@ -107,7 +107,6 @@ contract MarketTest is Test {
         market.buyToken{value: 2.24 ether}(0, address(0));
         vm.stopPrank();
         console.log(customer.balance);
-        console.log(market.refund());
         assert(startBalance - customer.balance == 2.24 ether - 0.016 ether);
         assertEq(myToken.balanceOf(customer), 101);
     }

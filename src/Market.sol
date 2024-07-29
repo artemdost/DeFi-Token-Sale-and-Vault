@@ -7,6 +7,11 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 contract Market {
     using SafeERC20 for IERC20;
 
+    event TokenAccessChanged(address _token, bool _access);
+    event MyTokenChanged(address _myToken);
+    event VaultChanged(address _vault);
+    event TokenPurchased(address _who, uint256 _amount, address _tokenToPay);
+
     // Own token
     IERC20 public MTK;
     // Address of vault
@@ -17,8 +22,6 @@ contract Market {
     mapping(address => bool) public allowedTokens;
 
     bool private locked;
-
-    uint256 public refund;
 
     modifier isOwner() {
         require(msg.sender == owner, "not an owner");
@@ -52,6 +55,8 @@ contract Market {
      */
     function changeMyToken(address _addr) public isOwner {
         MTK = IERC20(_addr);
+
+        emit MyTokenChanged(_addr);
     }
 
     /**
@@ -60,17 +65,10 @@ contract Market {
      *      It is important to set token addresses before they are used.
      * @param _addr The address of the token to be allowed.
      */
-    function allowToken(address _addr) public isOwner {
-        allowedTokens[_addr] = true;
-    }
+    function allowToken(address _addr, bool access) public isOwner {
+        allowedTokens[_addr] = access;
 
-    /**
-     * @notice Blocks the permission to pay using the given token.
-     * @dev This function can only be called by the owner of the contract.
-     * @param _addr The address of the token to be blocked.
-     */
-    function blockToken(address _addr) public isOwner {
-        allowedTokens[_addr] = false;
+        emit TokenAccessChanged(_addr, access);
     }
 
     /**
@@ -91,6 +89,8 @@ contract Market {
      */
     function changeVault(address _vault) public isOwner {
         vault = _vault;
+
+        emit VaultChanged(_vault);
     }
 
     /**
@@ -113,11 +113,9 @@ contract Market {
             (bool sent,) = address(vault).call{value: msg.value / 10}("");
             require(sent, "Failed to send Ether");
             // Check if there are extra eth and transfer eth to msg.sender back if it is
-            refund = msg.value - (amountMTK * 2 ether) - (msg.value / 10);
-            if (refund >= 1000000000000) {
-                (sent,) = msg.sender.call{value: refund}("");
-                require(sent, "Failed to send Ether");
-            }
+            uint256 refund = msg.value - (amountMTK * 2 ether) - (msg.value / 10);
+            (sent,) = msg.sender.call{value: refund}("");
+            require(sent, "Failed to send Ether");
         } else {
             require(allowedTokens[_tokenToPay] == true, "Token is not allowed");
             IERC20 payToken = IERC20(_tokenToPay);
@@ -128,5 +126,7 @@ contract Market {
             // Transfer purchased tokens MTK to msg.sender
             MTK.safeTransfer(msg.sender, amount);
         }
+
+        emit TokenPurchased(msg.sender, amount, _tokenToPay);
     }
 }

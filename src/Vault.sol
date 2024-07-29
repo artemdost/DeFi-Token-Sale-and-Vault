@@ -9,6 +9,11 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 contract Vault {
     using SafeERC20 for IERC20;
 
+    event MarketAddressChanged(address _market);
+    event CheckAddressChanged(address _check);
+    event NewDeposit(address _who, uint256 _amount, address _token);
+    event DepositReturned(address _who, uint _amount, address _token);
+
     address public owner;
     IMarket public market;
     ICustomERC721 public check;
@@ -57,6 +62,8 @@ contract Vault {
      */
     function setUpMarket(address _market) public isOwner {
         market = IMarket(_market);
+
+        emit MarketAddressChanged(_market);
     }
 
     /**
@@ -66,6 +73,8 @@ contract Vault {
      */
     function setUpCheck(address _check) public isOwner {
         check = ICustomERC721(_check);
+
+        emit CheckAddressChanged(_check);
     }
 
     /**
@@ -81,6 +90,8 @@ contract Vault {
             // connect deposit to nft
             deposits[msg.sender][check.getLastId()] =
                 Deposit({status: Status.Active, token: address(0), amount: msg.value});
+            
+            emit NewDeposit(msg.sender, msg.value, address(0));
         } else {
             require(market.isAllowed(_tokenToPay), "Token is not allowed");
             IERC20 payToken = IERC20(_tokenToPay);
@@ -91,7 +102,10 @@ contract Vault {
             // connect deposit to nft
             deposits[msg.sender][check.getLastId()] =
                 Deposit({status: Status.Active, token: _tokenToPay, amount: _amount});
+            
+            emit NewDeposit(msg.sender, _amount, _tokenToPay);
         }
+
     }
 
     /**
@@ -115,11 +129,15 @@ contract Vault {
             // transfer deposit tokens from this contract to msg.sender
             payToken.safeTransfer(msg.sender, depositAmount + depositBonus);
             deposits[msg.sender][_tokenId].status = Status.Refunded;
+
+            emit DepositReturned(msg.sender, depositAmount + depositBonus, address(0));
         } else {
             // transfer deposit eth from this contract to msg.sender
             (bool sent,) = msg.sender.call{value: depositAmount + depositBonus}("");
             require(sent, "Failed to send Ether");
             deposits[msg.sender][_tokenId].status = Status.Refunded;
+
+            emit DepositReturned(msg.sender, msg.value, address(0));
         }
     }
 
