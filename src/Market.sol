@@ -110,10 +110,10 @@ contract Market {
             // Transfer purchased tokens from this contract to msg.sender
             MTK.safeTransfer(msg.sender, amountMTK);
             // Transfer 10 percent commission to vault
-            (bool sent,) = address(vault).call{value: msg.value / 10}("");
+            (bool sent,) = address(vault).call{value: msg.value * 1000 / 10000}("");
             require(sent, "Failed to send Ether");
             // Check if there are extra eth and transfer eth to msg.sender back if it is
-            uint256 refund = msg.value - (amountMTK * 2 ether) - (msg.value / 10);
+            uint256 refund = msg.value - (amountMTK * 2 ether) - (msg.value * 1000 / 10000);
             (sent,) = msg.sender.call{value: refund}("");
             require(sent, "Failed to send Ether");
         } else {
@@ -122,7 +122,7 @@ contract Market {
             // Transfer pay tokens + 10 percent from msg.sender to this contract
             payToken.safeTransferFrom(msg.sender, address(this), amount);
             // Transfer 10 percent from msg.sender to vault
-            payToken.safeTransferFrom(msg.sender, vault, amount / 10);
+            payToken.safeTransferFrom(msg.sender, vault, amount * 1000 / 10000);
             // Transfer purchased tokens MTK to msg.sender
             MTK.safeTransfer(msg.sender, amount);
         }

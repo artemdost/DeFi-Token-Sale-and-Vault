@@ -12,7 +12,7 @@ contract Vault {
     event MarketAddressChanged(address _market);
     event CheckAddressChanged(address _check);
     event NewDeposit(address _who, uint256 _amount, address _token);
-    event DepositReturned(address _who, uint _amount, address _token);
+    event DepositReturned(address _who, uint256 _amount, address _token);
 
     address public owner;
     IMarket public market;
@@ -90,7 +90,7 @@ contract Vault {
             // connect deposit to nft
             deposits[msg.sender][check.getLastId()] =
                 Deposit({status: Status.Active, token: address(0), amount: msg.value});
-            
+
             emit NewDeposit(msg.sender, msg.value, address(0));
         } else {
             require(market.isAllowed(_tokenToPay), "Token is not allowed");
@@ -102,10 +102,9 @@ contract Vault {
             // connect deposit to nft
             deposits[msg.sender][check.getLastId()] =
                 Deposit({status: Status.Active, token: _tokenToPay, amount: _amount});
-            
+
             emit NewDeposit(msg.sender, _amount, _tokenToPay);
         }
-
     }
 
     /**
@@ -115,27 +114,29 @@ contract Vault {
      * @param _tokenId The ID of the NFT representing the deposit.
      */
     function returnDeposit(uint256 _tokenId) public payable noReentrancy {
+        Deposit memory deposit = deposits[msg.sender][_tokenId];
+
         require(msg.sender == check.ownerOf(_tokenId), "You are not an owner of this NFT");
-        require(deposits[msg.sender][_tokenId].status == Status.Active, "Deposit is not active");
+        require(deposit.status == Status.Active, "Deposit is not active");
 
         // burn check
         check.burn(_tokenId);
 
-        uint256 depositAmount = deposits[msg.sender][_tokenId].amount;
-        uint256 depositBonus = deposits[msg.sender][_tokenId].amount / 50;
-        IERC20 payToken = IERC20(deposits[msg.sender][_tokenId].token);
+        uint256 depositAmount = deposit.amount;
+        uint256 depositBonus = deposit.amount * 200 / 10000;
+        IERC20 payToken = IERC20(deposit.token);
 
-        if (deposits[msg.sender][_tokenId].token != address(0)) {
+        if (deposit.token != address(0)) {
             // transfer deposit tokens from this contract to msg.sender
             payToken.safeTransfer(msg.sender, depositAmount + depositBonus);
-            deposits[msg.sender][_tokenId].status = Status.Refunded;
+            deposit.status = Status.Refunded;
 
             emit DepositReturned(msg.sender, depositAmount + depositBonus, address(0));
         } else {
             // transfer deposit eth from this contract to msg.sender
             (bool sent,) = msg.sender.call{value: depositAmount + depositBonus}("");
             require(sent, "Failed to send Ether");
-            deposits[msg.sender][_tokenId].status = Status.Refunded;
+            deposit.status = Status.Refunded;
 
             emit DepositReturned(msg.sender, msg.value, address(0));
         }
