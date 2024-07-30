@@ -106,9 +106,43 @@ contract MarketTest is Test {
         uint256 startBalance = customer.balance;
         market.buyToken{value: 2.24 ether}(0, address(0));
         vm.stopPrank();
-        console.log(customer.balance);
-        assert(startBalance - customer.balance == 2.24 ether - 0.016 ether);
+        assertEq(startBalance - customer.balance,  2.2 ether);
+
+    }
+
+    function testBuytokenWith3eth() public base {
+        vm.startPrank(customer);
+        uint256 startBalance = customer.balance;
+        market.buyToken{value: 3 ether}(0, address(0));
+        vm.stopPrank();
+        assertEq(startBalance - customer.balance,  2.2 ether);
         assertEq(myToken.balanceOf(customer), 101);
+    }
+
+    function testBuytokenWith4_4eth() public base {
+        vm.startPrank(customer);
+        uint256 startBalance = customer.balance;
+        market.buyToken{value: 4.4 ether}(0, address(0));
+        vm.stopPrank();
+        assertEq(startBalance - customer.balance,  4.4 ether);
+        assertEq(myToken.balanceOf(customer), 102);
+    }
+
+    function testBuytokenWith4_5eth() public base {
+        vm.startPrank(customer);
+        uint256 startBalance = customer.balance;
+        market.buyToken{value: 5 ether}(0, address(0));
+        vm.stopPrank();
+        assertEq(startBalance - customer.balance,  4.4 ether);
+        assertEq(myToken.balanceOf(customer), 102);
+    }
+
+    function testBuytokenWith1eth() public base {
+        vm.startPrank(customer);
+        uint256 startBalance = customer.balance;
+        vm.expectRevert("Is not enough to buy at least 1 token");
+        market.buyToken{value: 1 ether}(0, address(0));
+        vm.stopPrank();
     }
 
     function testDeposit() public base {

@@ -113,7 +113,7 @@ contract Market {
             (bool sent,) = address(vault).call{value: msg.value * 1000 / 10000}("");
             require(sent, "Failed to send Ether");
             // Check if there are extra eth and transfer eth to msg.sender back if it is
-            uint256 refund = msg.value - (amountMTK * 2 ether) - (msg.value * 1000 / 10000);
+            uint256 refund = msg.value - (amountMTK * 2 ether) - (amountMTK * 0.2 ether);
             (sent,) = msg.sender.call{value: refund}("");
             require(sent, "Failed to send Ether");
         } else {
